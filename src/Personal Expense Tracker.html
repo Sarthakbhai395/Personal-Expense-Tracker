@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Expense Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        h1:hover {
+            transform: scale(1.05);
+        }
+        .form-container, .table-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-container:hover, .table-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+            font-size: 1.1em;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input:focus, select:focus {
+            border-color: #0984e3;
+            box-shadow: 0 0 8px rgba(9, 132, 227, 0.3);
+            outline: none;
+        }
+        button {
+            padding: 12px 25px;
+            background-color: #00b894;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #00a376;
+            transform: translateY(-2px);
+        }
+        button[type="button"] {
+            background-color: #d63031;
+        }
+        button[type="button"]:hover {
+            background-color: #b61827;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dfe6e9;
+        }
+        th {
+            background: linear-gradient(90deg, #0984e3, #74b9ff);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        tr {
+            transition: background-color 0.3s ease;
+        }
+        tr:hover {
+            background-color: #f1f2f6;
+        }
+        .stats {
+            margin-top: 25px;
+            font-size: 1.1em;
+            color: #2d3436;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .error {
+            color: #d63031;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #ffe6e6;
+            border-radius: 6px;
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>Personal Expense Tracker</h1>
+    <div class="form-container">
+        <div id="error" class="error"></div>
+        <label for="expenseName">Expense Name:</label>
+        <input type="text" id="expenseName" placeholder="Enter expense name">
+        
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" placeholder="Enter amount">
+        
+        <label for="category">Category:</label>
+        <select id="category">
+            <option value="Food">Food</option>
+            <option value="Travel">Travel</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Others">Others</option>
+        </select>
+        
+        <label for="status">Status:</label>
+        <select id="status">
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+        </select>
+        
+        <label for="date">Date:</label>
+        <input type="date" id="date">
+        
+        <button id="addExpenseBtn">Add Expense</button>
+        <button type="button" id="resetFormBtn">Reset Form</button>
+    </div>
+
+    <div class="table-container">
+        <table id="expenseTable">
+            <thead>
+                <tr>
+                    <th>Expense Name</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="expenseTableBody"></tbody>
+        </table>
+        <div class="stats">
+            <p>Total Expenses: <span id="totalExpenses">0</span></p>
+            <p>Average Expense: <span id="avgExpenses">0</span></p>
+            <p>Total Paid Expenses: <span id="totalPaidExpenses">0</span></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/typescript@5.1.6/lib/typescript.js"></script>
+    <script>
+        const tsCode = `
+            type Expense = {
+                name: string;
+                amount: number;
+                category: Category;
+                status: Status;
+                date: string;
+            };
+
+            enum Category {
+                Food = "Food",
+                Travel = "Travel",
+                Shopping = "Shopping",
+                Others = "Others"
+            }
+
+            enum Status {
+                Paid = "paid",
+                Pending = "pending"
+            }
+
+            type Transaction = [string, number, string];
+
+            let expenses: Expense[] = [];
+            let transactions: Transaction[] = [];
+
+            const expenseNameInput = document.getElementById("expenseName") as HTMLInputElement;
+            const amountInput = document.getElementById("amount") as HTMLInputElement;
+            const categorySelect = document.getElementById("category") as HTMLSelectElement;
+            const statusSelect = document.getElementById("status") as HTMLSelectElement;
+            const dateInput = document.getElementById("date") as HTMLInputElement;
+            const expenseTableBody = document.getElementById("expenseTableBody") as HTMLTableSectionElement;
+            const totalExpensesSpan = document.getElementById("totalExpenses") as HTMLSpanElement;
+            const avgExpensesSpan = document.getElementById("avgExpenses") as HTMLSpanElement;
+            const totalPaidExpensesSpan = document.getElementById("totalPaidExpenses") as HTMLSpanElement;
+            const errorDiv = document.getElementById("error") as HTMLDivElement;
+            const addExpenseBtn = document.getElementById("addExpenseBtn") as HTMLButtonElement;
+            const resetFormBtn = document.getElementById("resetFormBtn") as HTMLButtonElement;
+
+            const computeStats = (expenses: Expense[]): { total: number, average: number } => {
+                const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+                const average = expenses.length > 0 ? total / expenses.length : 0;
+                return { total, average };
+            };
+
+            const filterExpenses = (status?: Status): Expense[] => {
+                return status ? expenses.filter(expense => expense.status === status) : expenses;
+            };
+
+            const validateStatus = (status: string): Status => {
+                if (status === Status.Paid || status === Status.Pending) {
+                    return status as Status;
+                }
+                throw new Error("Invalid status");
+            };
+
+            const resetForm = (): void => {
+                expenseNameInput.value = "";
+                amountInput.value = "";
+                categorySelect.value = Category.Food;
+                statusSelect.value = Status.Paid;
+                dateInput.value = "";
+                errorDiv.style.display = "none";
+                errorDiv.textContent = "";
+            };
+
+            const validateCategory = (category: string): Category => {
+                const validCategories = Object.values(Category);
+                if (validCategories.includes(category as Category)) {
+                    return category as Category;
+                }
+                throw new Error("Invalid category");
+            };
+
+            const addExpense = (): void => {
+                try {
+                    const name = expenseNameInput.value.trim();
+                    const amount = parseFloat(amountInput.value);
+                    const category = validateCategory(categorySelect.value);
+                    const status = validateStatus(statusSelect.value);
+                    const date = dateInput.value;
+
+                    if (!name || isNaN(amount) || amount <= 0 || !date) {
+                        throw new Error("Please fill all fields correctly. Amount must be greater than 0.");
+                    }
+
+                    const expense: Expense = { name, amount, category, status, date };
+                    expenses.push(expense);
+
+                    const transaction: Transaction = [name, amount, date];
+                    transactions.push(transaction);
+
+                    console.log("New Expense Added:", {
+                        Name: name,
+                        Amount: amount,
+                        Category: category,
+                        Status: status,
+                        Date: date
+                    });
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = \`
+                        <td>\${name}</td>
+                        <td>\${amount}</td>
+                        <td>\${category}</td>
+                        <td>\${status}</td>
+                        <td>\${date}</td>
+                    \`;
+                    expenseTableBody.appendChild(row);
+
+                    const stats = computeStats(expenses);
+                    totalExpensesSpan.textContent = stats.total.toFixed(2);
+                    avgExpensesSpan.textContent = stats.average.toFixed(2);
+
+                    const paidExpenses = filterExpenses(Status.Paid);
+                    const paidStats = computeStats(paidExpenses);
+                    totalPaidExpensesSpan.textContent = paidStats.total.toFixed(2);
+
+                    resetForm();
+                } catch (error: unknown) {
+                    const errorMessage = (error as Error).message;
+                    errorDiv.style.display = "block";
+                    errorDiv.textContent = errorMessage;
+                }
+            };
+
+            addExpenseBtn.addEventListener("click", addExpense);
+            resetFormBtn.addEventListener("click", resetForm);
+        `;
+
+        const jsCode = ts.transpile(tsCode);
+        eval(jsCode);
+    </script>
+</body>
+</html>
